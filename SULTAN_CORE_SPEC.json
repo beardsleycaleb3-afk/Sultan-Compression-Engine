@@ -1,0 +1,17 @@
+{
+  "system": "Sultan-v88",
+  "architect_id": "wdprp-qqzqs-7xi34-x7q7t-jew73-h6w53-uroca-47t3u-x4sz5-aydwy-pqe",
+  "constants": {
+    "origin": "018810",
+    "ratio": "3000:1",
+    "seal": "8oOOo8"
+  },
+  "instruction_set": {
+    "rotational": ["q", "d", "b", "p"],
+    "pivotal": ["I", "H"],
+    "vibrational": ["u", "n", "m", "w"]
+  },
+  "equilibrium_map": [
+    "o", "oO0", "oO001", "oO00110", "oO0011001", "oO00110", "oO001", "oO0", "o"
+  ]
+}
