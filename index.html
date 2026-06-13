@@ -3,52 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <title>Sultan-v88: Geometric Verification Engine</title>
+    <link rel="stylesheet" href="shared/sultan-theme.css">
     <style>
-        body { background: #050505; color: #00FF41; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; }
-        #canvas-container { border: 2px solid #00FF41; box-shadow: 0 0 20px #00FF41; position: relative; }
-        canvas { background: #000; image-rendering: pixelated; }
-        #console { width: 600px; height: 150px; background: #000; border: 1px solid #008F11; margin-top: 20px; padding: 10px; font-size: 12px; overflow-y: auto; color: #008F11; }
-        #download-btn { margin-top: 20px; padding: 10px 20px; background: #00FF41; color: #000; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        #download-btn:hover { background: #fff; }
-        .glitch { animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        body { justify-content: center; min-height: 100vh; overflow: hidden; }
+        #console { width: 600px; height: 150px; margin-top: 20px; }
+        #download-btn { margin-top: 20px; }
     </style>
 </head>
 <body>
 
     <h2 class="glitch">SULTAN-v88 // GEOMETRIC MIRROR VERIFICATION</h2>
     
-    <div id="canvas-container">
+    <div class="sultan-canvas-wrap">
         <canvas id="sultanCanvas" width="300" height="300"></canvas>
     </div>
 
-    <div id="console">Initializing Sultan-v88 Core...<br></div>
+    <div id="console" class="sultan-console">Initializing Sultan-v88 Core...<br></div>
     
-    <button id="download-btn" style="display:none;">Download Verified Manifest (8oOOo8)</button>
+    <button id="download-btn" class="sultan-btn" style="display:none;">Download Verified Manifest (8oOOo8)</button>
 
+<script src="shared/sultan-core.js"></script>
 <script>
 /**
  * THE SULTAN KERNEL (WASM LOGIC INLINE)
  * This script handles the qdbp rotational math and Diamond Equilibrium visualization.
  */
 
-const log = (msg) => {
-    const cons = document.getElementById('console');
-    cons.innerHTML += `> ${msg}<br>`;
-    cons.scrollTop = cons.scrollHeight;
-};
-
-// The 256 Binary Strand Logic (Subset of the Master Table)
-const SULTAN_SYMBOLS = {
-    0x71: 'q', 0x64: 'd', 0x62: 'b', 0x70: 'p', // The Flips
-    0x49: 'I', 0x48: 'H',                     // The 90° Pivot
-    0x21: '!', 0x69: 'i',                     // The Pulse
-    0x30: '0', 0x31: '1', 0x38: '8'           // The Core
-};
+const log = createLogger('console');
 
 const runVerification = async () => {
-    const canvas = document.getElementById('sultanCanvas');
-    const ctx = canvas.getContext('2d');
+    const { ctx } = initCanvas('sultanCanvas');
     const btn = document.getElementById('download-btn');
     
     log("Mapping Subnet Mask (WTYUIO)...");
@@ -56,14 +40,9 @@ const runVerification = async () => {
     
     // Simulate WASM 3000:1 Fold
     let dataStream = [0x71, 0x49, 0x30, 0x64, 0x48, 0x38, 0x62, 0x21, 0x31, 0x70, 0x69];
-    let grid = Array(300).fill().map(() => Array(300).fill(0));
 
     log("Executing qdbp Rotational Logic...");
     
-    // Geometric Rendering of the Diamond Equilibrium
-    ctx.strokeStyle = '#00FF41';
-    ctx.lineWidth = 1;
-
     let center = 150;
     let step = 0;
 
@@ -77,7 +56,7 @@ const runVerification = async () => {
         let symbol = SULTAN_SYMBOLS[hex] || '?';
         
         // 90-Degree IH Logic
-        if (hex === 0x49 || hex === 0x48) {
+        if (PIVOT_HEX_CODES.includes(hex)) {
             ctx.beginPath();
             ctx.moveTo(center - (step * 10), center);
             ctx.lineTo(center + (step * 10), center);
@@ -86,7 +65,7 @@ const runVerification = async () => {
         } 
         
         // qdbp Rotational Folds
-        else if ([0x71, 0x64, 0x62, 0x70].includes(hex)) {
+        else if (FLIP_HEX_CODES.includes(hex)) {
             let offset = step * 12;
             ctx.strokeRect(center - offset/2, center - offset/2, offset, offset);
             log(`Fold qdbp (Equilibrium): ${symbol} Mirror Active`);
@@ -97,27 +76,21 @@ const runVerification = async () => {
     };
 
     const finalize = () => {
-        log("Compression Ratio Check: 3000:1");
-        log("Integrity Check: 8oOOo8 [VALID]");
+        log(`Compression Ratio Check: ${SULTAN_CONFIG.ratio}`);
+        log(`Integrity Check: ${SULTAN_CONFIG.seal} [VALID]`);
         log("Verification Complete. Ready for Grant Submission.");
         btn.style.display = 'block';
         
         btn.onclick = () => {
-            const manifest = {
-                engine: "Sultan-v88",
-                architecture: "DBM Triple-Split",
-                entry: ".go",
-                logic_gates: ["qdbp", "IH-90", "unnu", "mwwm"],
-                memory_map: "64KB_Symmetry_Bus",
-                shannon_limit_bypass: true,
-                verification_seal: "8oOOo8"
-            };
-            const blob = new Blob([JSON.stringify(manifest, null, 4)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'SULTAN_PROJECT_MANIFEST.json';
-            a.click();
+            downloadJSON({
+                engine: SULTAN_CONFIG.engine,
+                architecture: SULTAN_CONFIG.arch,
+                entry: SULTAN_CONFIG.entry,
+                logic_gates: SULTAN_CONFIG.gates,
+                memory_map: SULTAN_CONFIG.memMap,
+                shannon_limit_bypass: SULTAN_CONFIG.shannonBypass,
+                verification_seal: SULTAN_CONFIG.seal
+            }, 'SULTAN_PROJECT_MANIFEST.json');
         };
     };
 
