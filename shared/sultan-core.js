@@ -36,7 +36,9 @@ function createLogger(consoleEl) {
         consoleEl = document.getElementById(consoleEl);
     }
     return function log(msg) {
-        consoleEl.innerHTML += `> ${msg}<br>`;
+        var line = document.createElement('div');
+        line.textContent = '> ' + msg;
+        consoleEl.appendChild(line);
         consoleEl.scrollTop = consoleEl.scrollHeight;
     };
 }
