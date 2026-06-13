@@ -47,94 +47,149 @@
     </div>
 
 <script>
-const canvas = document.getElementById('sultanCanvas');
-const ctx = canvas.getContext('2d');
-const cons = document.getElementById('console');
-const toggle = document.getElementById('kbMouseToggle');
-
-let isFolding = false;
-let foldScale = 1.0;
-const center = 200;
-let frame = 0;
-
 const log = (msg) => {
+    const cons = document.getElementById('console');
+    if (!cons) {
+        console.error('[Sultan-v88 Demo] Console element not found. Message:', msg);
+        return;
+    }
     cons.innerHTML += `> ${msg}<br>`;
     cons.scrollTop = cons.scrollHeight;
 };
 
-// Input Gatekeeper
-const preventInput = (e) => {
-    if (!toggle.checked) {
-        if (e.type.startsWith('key') || e.type.startsWith('mouse')) {
-            e.preventDefault();
-            return false;
+const logError = (msg, err) => {
+    const detail = err ? ` [${err.name}: ${err.message}]` : '';
+    log(`ERROR: ${msg}${detail}`);
+    console.error(`[Sultan-v88 Demo] ${msg}`, err || '');
+};
+
+(function initSultanDemo() {
+    const canvas = document.getElementById('sultanCanvas');
+    if (!canvas) {
+        logError('Canvas element "sultanCanvas" not found in DOM');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        logError('Unable to acquire 2D rendering context from canvas');
+        return;
+    }
+
+    const toggle = document.getElementById('kbMouseToggle');
+    if (!toggle) {
+        logError('Toggle element "kbMouseToggle" not found in DOM');
+        return;
+    }
+
+    let isFolding = false;
+    let foldScale = 1.0;
+    const center = 200;
+    let frame = 0;
+
+    // Input Gatekeeper
+    const preventInput = (e) => {
+        if (!toggle.checked) {
+            if (e.type.startsWith('key') || e.type.startsWith('mouse')) {
+                e.preventDefault();
+                return false;
+            }
         }
-    }
-};
+    };
 
-window.addEventListener('keydown', preventInput, true);
-window.addEventListener('mousedown', preventInput, true);
+    window.addEventListener('keydown', preventInput, true);
+    window.addEventListener('mousedown', preventInput, true);
 
-// Sultan Core Logic
-document.getElementById('foldBtn').ontouchstart = () => {
-    isFolding = true;
-    log("FOLDING: Collapsing to Diamond Equilibrium...");
-};
+    // Sultan Core Logic — bind both touch and click for cross-device support
+    const foldBtn = document.getElementById('foldBtn');
+    const unfoldBtn = document.getElementById('unfoldBtn');
+    const manifestBtn = document.getElementById('manifestBtn');
 
-document.getElementById('unfoldBtn').ontouchstart = () => {
-    isFolding = false;
-    log("UNFOLDING: Reconstructing from Mirror Spec...");
-};
-
-document.getElementById('manifestBtn').ontouchstart = () => {
-    const blob = new Blob([JSON.stringify({seal:"8oOOo8", status:"Verified"}, null, 2)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'SULTAN_MOBILE_EXPORT.json';
-    a.click();
-    log("8oOOo8 SEAL DOWNLOADED.");
-};
-
-function animate() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-    ctx.fillRect(0, 0, 400, 400);
-
-    // Dynamic Folding Math
-    if (isFolding && foldScale > 0.05) foldScale -= 0.02;
-    if (!isFolding && foldScale < 1.0) foldScale += 0.02;
-
-    const time = Date.now() * 0.002;
-    
-    ctx.save();
-    ctx.translate(center, center);
-    ctx.scale(foldScale, foldScale);
-
-    // Crosshair Anchors
-    ctx.strokeStyle = 'rgba(0, 255, 65, 0.4)';
-    ctx.strokeRect(-180, -1, 360, 2);
-    ctx.strokeRect(-1, -180, 2, 360);
-
-    // Diamond Lattice
-    ctx.strokeStyle = '#00FF41';
-    for(let i=0; i<6; i++) {
-        ctx.rotate(time * 0.2 + (i * Math.PI / 3));
-        ctx.strokeRect(-50 - (i*20), -50 - (i*20), 100 + (i*40), 100 + (i*40));
-    }
-    
-    ctx.restore();
-    
-    if (frame % 60 === 0) {
-        if(isFolding) log("Symmetry Collapse Active...");
+    if (!foldBtn || !unfoldBtn || !manifestBtn) {
+        logError('One or more control buttons not found in DOM');
+        return;
     }
 
-    frame++;
-    requestAnimationFrame(animate);
-}
+    const handleFold = () => {
+        isFolding = true;
+        log("FOLDING: Collapsing to Diamond Equilibrium...");
+    };
 
-log("Touch Interface Ready.");
-log("Mouse/KB Locked by default.");
-animate();
+    const handleUnfold = () => {
+        isFolding = false;
+        log("UNFOLDING: Reconstructing from Mirror Spec...");
+    };
+
+    const handleManifestExport = () => {
+        try {
+            const blob = new Blob([JSON.stringify({seal:"8oOOo8", status:"Verified"}, null, 2)], {type:'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'SULTAN_MOBILE_EXPORT.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            log("8oOOo8 SEAL DOWNLOADED.");
+        } catch (err) {
+            logError('Failed to export manifest', err);
+        }
+    };
+
+    foldBtn.addEventListener('touchstart', handleFold);
+    foldBtn.addEventListener('click', handleFold);
+    unfoldBtn.addEventListener('touchstart', handleUnfold);
+    unfoldBtn.addEventListener('click', handleUnfold);
+    manifestBtn.addEventListener('touchstart', handleManifestExport);
+    manifestBtn.addEventListener('click', handleManifestExport);
+
+    function animate() {
+        try {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillRect(0, 0, 400, 400);
+
+            // Dynamic Folding Math
+            if (isFolding && foldScale > 0.05) foldScale -= 0.02;
+            if (!isFolding && foldScale < 1.0) foldScale += 0.02;
+
+            const time = Date.now() * 0.002;
+
+            ctx.save();
+            ctx.translate(center, center);
+            ctx.scale(foldScale, foldScale);
+
+            // Crosshair Anchors
+            ctx.strokeStyle = 'rgba(0, 255, 65, 0.4)';
+            ctx.strokeRect(-180, -1, 360, 2);
+            ctx.strokeRect(-1, -180, 2, 360);
+
+            // Diamond Lattice
+            ctx.strokeStyle = '#00FF41';
+            for(let i=0; i<6; i++) {
+                ctx.rotate(time * 0.2 + (i * Math.PI / 3));
+                ctx.strokeRect(-50 - (i*20), -50 - (i*20), 100 + (i*40), 100 + (i*40));
+            }
+
+            ctx.restore();
+
+            if (frame % 60 === 0) {
+                if(isFolding) log("Symmetry Collapse Active...");
+            }
+
+            frame++;
+        } catch (err) {
+            logError('Animation frame error', err);
+        }
+        requestAnimationFrame(animate);
+    }
+
+    log("Touch Interface Ready.");
+    log("Mouse/KB Locked by default.");
+    animate();
+})();
+
+window.onerror = (msg, src, line, col, err) => {
+    logError(`Uncaught error at ${src}:${line}:${col} \u2014 ${msg}`, err);
+};
 </script>
 </body>
 </html>
