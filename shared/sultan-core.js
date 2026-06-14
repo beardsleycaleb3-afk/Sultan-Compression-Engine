@@ -35,10 +35,20 @@ function createLogger(consoleEl) {
     if (typeof consoleEl === 'string') {
         consoleEl = document.getElementById(consoleEl);
     }
+    if (!consoleEl) {
+        console.error('[Sultan-v88] Console element not found — logging to browser console only');
+        return function log(msg) { console.log('[Sultan-v88]', msg); };
+    }
     return function log(msg) {
         consoleEl.innerHTML += `> ${msg}<br>`;
         consoleEl.scrollTop = consoleEl.scrollHeight;
     };
+}
+
+function logError(log, msg, err) {
+    var detail = err ? ' [' + err.name + ': ' + err.message + ']' : '';
+    log('ERROR: ' + msg + detail);
+    console.error('[Sultan-v88] ' + msg, err || '');
 }
 
 // ── Canvas ───────────────────────────────────────────────────────────
@@ -46,7 +56,13 @@ function createLogger(consoleEl) {
 function initCanvas(canvasId, strokeColor) {
     strokeColor = strokeColor || '#00FF41';
     var canvas = document.getElementById(canvasId);
-    var ctx    = canvas.getContext('2d');
+    if (!canvas) {
+        throw new Error('Canvas element "' + canvasId + '" not found in DOM');
+    }
+    var ctx = canvas.getContext('2d');
+    if (!ctx) {
+        throw new Error('Unable to acquire 2D rendering context from canvas "' + canvasId + '"');
+    }
     ctx.strokeStyle = strokeColor;
     ctx.lineWidth   = 1;
     return { canvas: canvas, ctx: ctx };
@@ -55,14 +71,19 @@ function initCanvas(canvasId, strokeColor) {
 // ── Download ─────────────────────────────────────────────────────────
 
 function downloadJSON(data, filename) {
-    var blob = new Blob(
-        [JSON.stringify(data, null, 4)],
-        { type: 'application/json' }
-    );
-    var url = URL.createObjectURL(blob);
-    var a   = document.createElement('a');
-    a.href     = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+        var blob = new Blob(
+            [JSON.stringify(data, null, 4)],
+            { type: 'application/json' }
+        );
+        var url = URL.createObjectURL(blob);
+        var a   = document.createElement('a');
+        a.href     = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error('[Sultan-v88] Failed to download "' + filename + '"', err);
+        throw err;
+    }
 }

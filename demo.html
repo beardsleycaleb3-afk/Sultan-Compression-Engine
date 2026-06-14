@@ -49,86 +49,124 @@
 
 <script src="shared/sultan-core.js"></script>
 <script>
-const { ctx } = initCanvas('sultanCanvas');
-const toggle = document.getElementById('kbMouseToggle');
-const log = createLogger('console');
+(function initSultanDemo() {
+    const log = createLogger('console');
 
-let isFolding = false;
-let foldScale = 1.0;
-const center = 200;
-let frame = 0;
+    try {
+        const { ctx } = initCanvas('sultanCanvas');
 
-// Input Gatekeeper
-const preventInput = (e) => {
-    if (!toggle.checked) {
-        if (e.type.startsWith('key') || e.type.startsWith('mouse')) {
-            e.preventDefault();
-            return false;
+        const toggle = document.getElementById('kbMouseToggle');
+        if (!toggle) {
+            throw new Error('Toggle element "kbMouseToggle" not found in DOM');
         }
+
+        let isFolding = false;
+        let foldScale = 1.0;
+        const center = 200;
+        let frame = 0;
+
+        // Input Gatekeeper
+        const preventInput = (e) => {
+            if (!toggle.checked) {
+                if (e.type.startsWith('key') || e.type.startsWith('mouse')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        };
+
+        window.addEventListener('keydown', preventInput, true);
+        window.addEventListener('mousedown', preventInput, true);
+
+        // Sultan Core Logic — bind both touch and click for cross-device support
+        const foldBtn = document.getElementById('foldBtn');
+        const unfoldBtn = document.getElementById('unfoldBtn');
+        const manifestBtn = document.getElementById('manifestBtn');
+
+        if (!foldBtn || !unfoldBtn || !manifestBtn) {
+            throw new Error('One or more control buttons not found in DOM');
+        }
+
+        const handleFold = () => {
+            isFolding = true;
+            log("FOLDING: Collapsing to Diamond Equilibrium...");
+        };
+
+        const handleUnfold = () => {
+            isFolding = false;
+            log("UNFOLDING: Reconstructing from Mirror Spec...");
+        };
+
+        const handleManifestExport = () => {
+            try {
+                downloadJSON(
+                    { seal: SULTAN_CONFIG.seal, status: "Verified" },
+                    'SULTAN_MOBILE_EXPORT.json'
+                );
+                log(`${SULTAN_CONFIG.seal} SEAL DOWNLOADED.`);
+            } catch (err) {
+                logError(log, 'Failed to export manifest', err);
+            }
+        };
+
+        foldBtn.addEventListener('touchstart', handleFold);
+        foldBtn.addEventListener('click', handleFold);
+        unfoldBtn.addEventListener('touchstart', handleUnfold);
+        unfoldBtn.addEventListener('click', handleUnfold);
+        manifestBtn.addEventListener('touchstart', handleManifestExport);
+        manifestBtn.addEventListener('click', handleManifestExport);
+
+        function animate() {
+            try {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.fillRect(0, 0, 400, 400);
+
+                // Dynamic Folding Math
+                if (isFolding && foldScale > 0.05) foldScale -= 0.02;
+                if (!isFolding && foldScale < 1.0) foldScale += 0.02;
+
+                const time = Date.now() * 0.002;
+
+                ctx.save();
+                ctx.translate(center, center);
+                ctx.scale(foldScale, foldScale);
+
+                // Crosshair Anchors
+                ctx.strokeStyle = 'rgba(0, 255, 65, 0.4)';
+                ctx.strokeRect(-180, -1, 360, 2);
+                ctx.strokeRect(-1, -180, 2, 360);
+
+                // Diamond Lattice
+                ctx.strokeStyle = '#00FF41';
+                for(let i=0; i<6; i++) {
+                    ctx.rotate(time * 0.2 + (i * Math.PI / 3));
+                    ctx.strokeRect(-50 - (i*20), -50 - (i*20), 100 + (i*40), 100 + (i*40));
+                }
+
+                ctx.restore();
+
+                if (frame % 60 === 0) {
+                    if(isFolding) log("Symmetry Collapse Active...");
+                }
+
+                frame++;
+            } catch (err) {
+                logError(log, 'Animation frame error', err);
+            }
+            requestAnimationFrame(animate);
+        }
+
+        log("Touch Interface Ready.");
+        log("Mouse/KB Locked by default.");
+        animate();
+    } catch (err) {
+        logError(log, 'Demo failed to initialize', err);
     }
+})();
+
+window.onerror = (msg, src, line, col, err) => {
+    console.error(`[Sultan-v88 Demo] Uncaught error at ${src}:${line}:${col} \u2014 ${msg}`, err);
 };
-
-window.addEventListener('keydown', preventInput, true);
-window.addEventListener('mousedown', preventInput, true);
-
-// Sultan Core Logic
-document.getElementById('foldBtn').ontouchstart = () => {
-    isFolding = true;
-    log("FOLDING: Collapsing to Diamond Equilibrium...");
-};
-
-document.getElementById('unfoldBtn').ontouchstart = () => {
-    isFolding = false;
-    log("UNFOLDING: Reconstructing from Mirror Spec...");
-};
-
-document.getElementById('manifestBtn').ontouchstart = () => {
-    downloadJSON(
-        { seal: SULTAN_CONFIG.seal, status: "Verified" },
-        'SULTAN_MOBILE_EXPORT.json'
-    );
-    log(`${SULTAN_CONFIG.seal} SEAL DOWNLOADED.`);
-};
-
-function animate() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-    ctx.fillRect(0, 0, 400, 400);
-
-    // Dynamic Folding Math
-    if (isFolding && foldScale > 0.05) foldScale -= 0.02;
-    if (!isFolding && foldScale < 1.0) foldScale += 0.02;
-
-    const time = Date.now() * 0.002;
-    
-    ctx.save();
-    ctx.translate(center, center);
-    ctx.scale(foldScale, foldScale);
-
-    // Crosshair Anchors
-    ctx.strokeStyle = 'rgba(0, 255, 65, 0.4)';
-    ctx.strokeRect(-180, -1, 360, 2);
-    ctx.strokeRect(-1, -180, 2, 360);
-
-    // Diamond Lattice
-    ctx.strokeStyle = '#00FF41';
-    for(let i=0; i<6; i++) {
-        ctx.rotate(time * 0.2 + (i * Math.PI / 3));
-        ctx.strokeRect(-50 - (i*20), -50 - (i*20), 100 + (i*40), 100 + (i*40));
-    }
-    
-    ctx.restore();
-    
-    if (frame % 60 === 0) {
-        if(isFolding) log("Symmetry Collapse Active...");
-    }
-
-    frame++;
-    requestAnimationFrame(animate);
-}
-
-log("Touch Interface Ready.");
-log("Mouse/KB Locked by default.");
-animate();
 </script>
 </body>
 </html>

@@ -32,72 +32,97 @@
 const log = createLogger('console');
 
 const runVerification = async () => {
-    const { ctx } = initCanvas('sultanCanvas');
-    const btn = document.getElementById('download-btn');
-    
-    log("Mapping Subnet Mask (WTYUIO)...");
-    log("Mapping Wildcard Mirror (qwuio)...");
-    
-    // Simulate WASM 3000:1 Fold
-    let dataStream = [0x71, 0x49, 0x30, 0x64, 0x48, 0x38, 0x62, 0x21, 0x31, 0x70, 0x69];
-
-    log("Executing qdbp Rotational Logic...");
-    
-    let center = 150;
-    let step = 0;
-
-    const drawMirror = () => {
-        if (step >= dataStream.length) {
-            finalize();
-            return;
+    try {
+        const { ctx } = initCanvas('sultanCanvas');
+        const btn = document.getElementById('download-btn');
+        if (!btn) {
+            throw new Error('Download button element "download-btn" not found in DOM');
         }
 
-        let hex = dataStream[step];
-        let symbol = SULTAN_SYMBOLS[hex] || '?';
-        
-        // 90-Degree IH Logic
-        if (PIVOT_HEX_CODES.includes(hex)) {
-            ctx.beginPath();
-            ctx.moveTo(center - (step * 10), center);
-            ctx.lineTo(center + (step * 10), center);
-            ctx.stroke();
-            log(`Pivot IH (90°): ${symbol} Verified`);
-        } 
-        
-        // qdbp Rotational Folds
-        else if (FLIP_HEX_CODES.includes(hex)) {
-            let offset = step * 12;
-            ctx.strokeRect(center - offset/2, center - offset/2, offset, offset);
-            log(`Fold qdbp (Equilibrium): ${symbol} Mirror Active`);
-        }
+        log("Mapping Subnet Mask (WTYUIO)...");
+        log("Mapping Wildcard Mirror (qwuio)...");
 
-        step++;
-        setTimeout(drawMirror, 150);
-    };
+        // Simulate WASM 3000:1 Fold
+        let dataStream = [0x71, 0x49, 0x30, 0x64, 0x48, 0x38, 0x62, 0x21, 0x31, 0x70, 0x69];
 
-    const finalize = () => {
-        log(`Compression Ratio Check: ${SULTAN_CONFIG.ratio}`);
-        log(`Integrity Check: ${SULTAN_CONFIG.seal} [VALID]`);
-        log("Verification Complete. Ready for Grant Submission.");
-        btn.style.display = 'block';
-        
-        btn.onclick = () => {
-            downloadJSON({
-                engine: SULTAN_CONFIG.engine,
-                architecture: SULTAN_CONFIG.arch,
-                entry: SULTAN_CONFIG.entry,
-                logic_gates: SULTAN_CONFIG.gates,
-                memory_map: SULTAN_CONFIG.memMap,
-                shannon_limit_bypass: SULTAN_CONFIG.shannonBypass,
-                verification_seal: SULTAN_CONFIG.seal
-            }, 'SULTAN_PROJECT_MANIFEST.json');
+        log("Executing qdbp Rotational Logic...");
+
+        let center = 150;
+        let step = 0;
+
+        const drawMirror = () => {
+            try {
+                if (step >= dataStream.length) {
+                    finalize();
+                    return;
+                }
+
+                let hex = dataStream[step];
+                let symbol = SULTAN_SYMBOLS[hex];
+
+                if (!symbol) {
+                    logError(log, `Unrecognized opcode 0x${hex.toString(16)} at index ${step} \u2014 skipping`);
+                    step++;
+                    setTimeout(drawMirror, 150);
+                    return;
+                }
+
+                // 90-Degree IH Logic
+                if (PIVOT_HEX_CODES.includes(hex)) {
+                    ctx.beginPath();
+                    ctx.moveTo(center - (step * 10), center);
+                    ctx.lineTo(center + (step * 10), center);
+                    ctx.stroke();
+                    log(`Pivot IH (90\u00b0): ${symbol} Verified`);
+                }
+
+                // qdbp Rotational Folds
+                else if (FLIP_HEX_CODES.includes(hex)) {
+                    let offset = step * 12;
+                    ctx.strokeRect(center - offset/2, center - offset/2, offset, offset);
+                    log(`Fold qdbp (Equilibrium): ${symbol} Mirror Active`);
+                }
+
+                step++;
+                setTimeout(drawMirror, 150);
+            } catch (err) {
+                logError(log, `Rendering failed at step ${step}`, err);
+            }
         };
-    };
 
-    drawMirror();
+        const finalize = () => {
+            log(`Compression Ratio Check: ${SULTAN_CONFIG.ratio}`);
+            log(`Integrity Check: ${SULTAN_CONFIG.seal} [VALID]`);
+            log("Verification Complete. Ready for Grant Submission.");
+            btn.style.display = 'block';
+
+            btn.onclick = () => {
+                try {
+                    downloadJSON({
+                        engine: SULTAN_CONFIG.engine,
+                        architecture: SULTAN_CONFIG.arch,
+                        entry: SULTAN_CONFIG.entry,
+                        logic_gates: SULTAN_CONFIG.gates,
+                        memory_map: SULTAN_CONFIG.memMap,
+                        shannon_limit_bypass: SULTAN_CONFIG.shannonBypass,
+                        verification_seal: SULTAN_CONFIG.seal
+                    }, 'SULTAN_PROJECT_MANIFEST.json');
+                } catch (err) {
+                    logError(log, 'Failed to export manifest', err);
+                }
+            };
+        };
+
+        drawMirror();
+    } catch (err) {
+        logError(log, 'Verification engine failed to initialize', err);
+    }
 };
 
 window.onload = runVerification;
+window.onerror = (msg, src, line, col, err) => {
+    logError(log, `Uncaught error at ${src}:${line}:${col} \u2014 ${msg}`, err);
+};
 </script>
 </body>
 </html>
