@@ -4,21 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sultan-v88 // Mobile Touch Spec</title>
+    <link rel="stylesheet" href="shared/sultan-theme.css">
     <style>
         * { box-sizing: border-box; touch-action: manipulation; }
-        body { background: #000; color: #00FF41; font-family: 'Courier New', monospace; margin: 0; display: flex; flex-direction: column; align-items: center; overflow: hidden; height: 100vh; }
+        body { overflow: hidden; height: 100vh; }
         
         /* Responsive Canvas */
-        #canvas-wrap { width: 90vw; height: 90vw; max-width: 400px; max-height: 400px; border: 1px solid #00FF41; background: #050505; position: relative; margin-top: 10px; }
+        #canvas-wrap { width: 90vw; height: 90vw; max-width: 400px; max-height: 400px; background: #050505; margin-top: 10px; border-width: 1px; }
         canvas { width: 100%; height: 100%; }
 
         /* Mobile Controls */
         #ui-layer { width: 100%; padding: 15px; display: flex; flex-direction: column; align-items: center; flex-grow: 1; justify-content: space-around; }
         .btn-row { display: flex; gap: 10px; width: 100%; max-width: 400px; }
-        button { flex: 1; padding: 20px; background: #000; color: #00FF41; border: 2px solid #00FF41; font-weight: bold; font-family: inherit; font-size: 16px; border-radius: 8px; }
-        button:active { background: #00FF41; color: #000; }
+        .btn-row button { flex: 1; padding: 20px; }
+        #manifestBtn { width: 100%; max-width: 400px; padding: 20px; }
         
-        #console { width: 90vw; max-width: 400px; height: 100px; border: 1px solid #008F11; font-size: 10px; padding: 5px; overflow-y: scroll; background: #000; }
+        #console { width: 90vw; max-width: 400px; height: 100px; font-size: 10px; padding: 5px; }
         
         .toggle-row { display: flex; align-items: center; gap: 10px; font-size: 12px; margin-top: 10px; }
         input[type="checkbox"] { transform: scale(1.5); }
@@ -26,19 +27,19 @@
 </head>
 <body>
 
-    <div id="canvas-wrap">
+    <div id="canvas-wrap" class="sultan-canvas-wrap">
         <canvas id="sultanCanvas" width="400" height="400"></canvas>
     </div>
 
     <div id="ui-layer">
-        <div id="console">BOOTING SULTAN-v88...</div>
+        <div id="console" class="sultan-console">BOOTING SULTAN-v88...</div>
 
         <div class="btn-row">
-            <button id="foldBtn">FOLD (3000:1)</button>
-            <button id="unfoldBtn">UNFOLD (018810)</button>
+            <button id="foldBtn" class="sultan-btn-outline">FOLD (3000:1)</button>
+            <button id="unfoldBtn" class="sultan-btn-outline">UNFOLD (018810)</button>
         </div>
 
-        <button id="manifestBtn" style="width: 100%; max-width: 400px;">EXPORT SEAL (8oOOo8)</button>
+        <button id="manifestBtn" class="sultan-btn-outline">EXPORT SEAL (8oOOo8)</button>
 
         <div class="toggle-row">
             <input type="checkbox" id="kbMouseToggle">
@@ -46,21 +47,16 @@
         </div>
     </div>
 
+<script src="shared/sultan-core.js"></script>
 <script>
-const canvas = document.getElementById('sultanCanvas');
-const ctx = canvas.getContext('2d');
-const cons = document.getElementById('console');
+const { ctx } = initCanvas('sultanCanvas');
 const toggle = document.getElementById('kbMouseToggle');
+const log = createLogger('console');
 
 let isFolding = false;
 let foldScale = 1.0;
 const center = 200;
 let frame = 0;
-
-const log = (msg) => {
-    cons.innerHTML += `> ${msg}<br>`;
-    cons.scrollTop = cons.scrollHeight;
-};
 
 // Input Gatekeeper
 const preventInput = (e) => {
@@ -87,13 +83,11 @@ document.getElementById('unfoldBtn').ontouchstart = () => {
 };
 
 document.getElementById('manifestBtn').ontouchstart = () => {
-    const blob = new Blob([JSON.stringify({seal:"8oOOo8", status:"Verified"}, null, 2)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'SULTAN_MOBILE_EXPORT.json';
-    a.click();
-    log("8oOOo8 SEAL DOWNLOADED.");
+    downloadJSON(
+        { seal: SULTAN_CONFIG.seal, status: "Verified" },
+        'SULTAN_MOBILE_EXPORT.json'
+    );
+    log(`${SULTAN_CONFIG.seal} SEAL DOWNLOADED.`);
 };
 
 function animate() {
